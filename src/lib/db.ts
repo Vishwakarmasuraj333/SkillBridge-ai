@@ -8,29 +8,20 @@ const globalForPrisma = globalThis as unknown as {
 // Use a fallback URL if DATABASE_URL is not set, so build doesn't fail on missing env
 const connectionString = process.env.DATABASE_URL || "mysql://root:password@localhost:3306/skillbridge_db";
 
-let prismaInstance: PrismaClient;
+const adapter = new PrismaMariaDb(connectionString);
 
-try {
-  const adapter = new PrismaMariaDb(connectionString);
-  prismaInstance =
-    globalForPrisma.prisma ??
-    new PrismaClient({
-      adapter,
-      log:
-        process.env.NODE_ENV === "development"
-          ? ["query", "error", "warn"]
-          : ["error"],
-    });
-} catch (error) {
-  console.error("Prisma initialization failed. Verify DATABASE_URL is correct.", error);
-  // Fallback client to prevent compilation crash
-  prismaInstance = new PrismaClient({} as any);
-}
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prismaInstance;
+  globalForPrisma.prisma = prisma;
 }
 
-export const prisma = prismaInstance;
-export const db = prismaInstance;
-export default prismaInstance;
+export default prisma;
