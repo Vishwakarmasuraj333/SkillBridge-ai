@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { analyzeResume } from "@/lib/ai";
 
 export async function POST(req: Request) {
@@ -16,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch resume
-    const resume = await db.resume.findFirst({
+    const resume = await prisma.resume.findFirst({
       where: { id: resumeId, userId: user.id },
     });
 
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
     const analysis = await analyzeResume(resume.text);
 
     // 3. Save analysis to database (Prisma Json fields accept raw JS arrays/objects)
-    const savedAnalysis = await db.resumeAnalysis.create({
+    const savedAnalysis = await prisma.resumeAnalysis.create({
       data: {
         userId: user.id,
         resumeId: resume.id,
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
     });
 
     // 4. Log activity
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "ANALYZE_RESUME",

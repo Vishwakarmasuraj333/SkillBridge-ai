@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function GET(
   req: Request,
@@ -14,7 +16,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const resume = await db.resume.findFirst({
+    const resume = await prisma.resume.findFirst({
       where: {
         id,
         userId: user.id,
@@ -48,7 +50,7 @@ export async function DELETE(
     const { id } = await params;
 
     // Check if resume exists and belongs to the user
-    const resume = await db.resume.findFirst({
+    const resume = await prisma.resume.findFirst({
       where: {
         id,
         userId: user.id,
@@ -60,14 +62,14 @@ export async function DELETE(
     }
 
     // Delete the resume (foreign keys will be handled by SetNull onDelete rules)
-    await db.resume.delete({
+    await prisma.resume.delete({
       where: {
         id,
       },
     });
 
     // Create ActivityLog entry
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "DELETE_RESUME",

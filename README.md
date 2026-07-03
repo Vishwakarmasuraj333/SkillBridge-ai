@@ -124,18 +124,36 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Deployment Notes
 
 ### Vercel Deployment
+
 To deploy this project to Vercel:
 1. Ensure your codebase is pushed to a remote GitHub repository.
 2. Link your Vercel account to GitHub and import the project.
-3. Configure your Environment Variables in the Vercel Project Settings (copy settings from your local `.env` file).
-4. Run the Prisma database migrations or build command:
-   ```bash
-   npx prisma generate
-   ```
-5. Click deploy.
+3. Configure your Environment Variables in the Vercel Project Settings.
+
+Required Vercel Environment Variables:
+```env
+DATABASE_URL="mysql://USER:PASSWORD@HOST:PORT/DATABASE_NAME"
+JWT_SECRET="production_secret"
+GEMINI_API_KEY="your_gemini_key"
+GEMINI_MODEL="gemini-2.5-flash"
+APP_URL="https://your-vercel-url.vercel.app"
+```
+
+Optional:
+```env
+OPENAI_API_KEY=""
+OPENAI_MODEL="gpt-4o-mini"
+NEXT_PUBLIC_RAZORPAY_KEY_ID=""
+RAZORPAY_KEY_ID=""
+RAZORPAY_KEY_SECRET=""
+RAZORPAY_WEBHOOK_SECRET=""
+LOCAL_DEMO_PAYMENT="false"
+```
+
+4. During deployment, Vercel will automatically generate the Prisma client thanks to the `postinstall` script and run the build script.
 
 > [!WARNING]
-> Ensure that your MySQL database server (e.g. Aiven, PlanetScale, AWS RDS, or self-hosted) is publicly accessible by Vercel's deployment servers, and that the connection URL (`DATABASE_URL`) is correctly configured in Vercel settings.
+> Local XAMPP DATABASE_URL like `mysql://root:@127.0.0.1:3306/skillbridge_db` will not work on Vercel. Use a cloud MySQL database (e.g. Aiven, PlanetScale, AWS RDS, or self-hosted) and make sure it is publicly accessible by Vercel's deployment servers.
 
 ---
 

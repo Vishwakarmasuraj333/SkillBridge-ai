@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { generateJSONWithAI } from "@/lib/ai";
 import { normalizeResumeData } from "@/lib/resume-normalizer";
 
@@ -17,15 +19,15 @@ export async function POST(
     const { id } = await params;
     const { targetRole, style, onePage } = await req.json();
 
-    const document = await db.resumeBuilderDocument.findFirst({
+    const builderDoc = await prisma.resumeBuilderDocument.findFirst({
       where: { id: id, userId: user.id },
     });
 
-    if (!document) {
+    if (!builderDoc) {
       return NextResponse.json({ error: "Document not found." }, { status: 404 });
     }
 
-    const existingData = document.structuredData as any;
+    const existingData = builderDoc.structuredData as any;
 
     const systemInstruction = `You are a professional ATS-friendly resume reviewer and writer.
 You are given a structured resume in JSON format.
@@ -111,7 +113,7 @@ Return the updated structured resume JSON matching this schema exactly:
       }
     }
 
-    const updatedDoc = await db.resumeBuilderDocument.update({
+    const updatedDoc = await prisma.resumeBuilderDocument.update({
       where: { id: id },
       data: {
         structuredData: normalizeResumeData(updatedData),
@@ -119,7 +121,7 @@ Return the updated structured resume JSON matching this schema exactly:
     });
 
     // Create ActivityLog entry
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "UPDATE_RESUME_BUILDER",

@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function GET(
   req: Request,
@@ -14,15 +16,15 @@ export async function GET(
 
     const { id } = await params;
 
-    const document = await db.resumeBuilderDocument.findFirst({
+    const builderDoc = await prisma.resumeBuilderDocument.findFirst({
       where: { id: id, userId: user.id },
     });
 
-    if (!document) {
+    if (!builderDoc) {
       return NextResponse.json({ error: "Resume builder document not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, document });
+    return NextResponse.json({ success: true, document: builderDoc });
   } catch (error: any) {
     console.error("Retrieve document error:", error);
     return NextResponse.json({ error: error.message || "Failed to retrieve document." }, { status: 500 });
@@ -42,11 +44,11 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
 
-    const document = await db.resumeBuilderDocument.findFirst({
+    const builderDoc = await prisma.resumeBuilderDocument.findFirst({
       where: { id: id, userId: user.id },
     });
 
-    if (!document) {
+    if (!builderDoc) {
       return NextResponse.json({ error: "Resume builder document not found." }, { status: 404 });
     }
 
@@ -58,13 +60,13 @@ export async function PATCH(
     if (body.structuredData !== undefined) dataToUpdate.structuredData = body.structuredData;
     if (body.htmlSnapshot !== undefined) dataToUpdate.htmlSnapshot = body.htmlSnapshot;
 
-    const updated = await db.resumeBuilderDocument.update({
+    const updated = await prisma.resumeBuilderDocument.update({
       where: { id: id },
       data: dataToUpdate,
     });
 
     // Create ActivityLog entry
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "UPDATE_RESUME_BUILDER",
@@ -92,15 +94,15 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const document = await db.resumeBuilderDocument.findFirst({
+    const builderDoc = await prisma.resumeBuilderDocument.findFirst({
       where: { id: id, userId: user.id },
     });
 
-    if (!document) {
+    if (!builderDoc) {
       return NextResponse.json({ error: "Resume builder document not found." }, { status: 404 });
     }
 
-    await db.resumeBuilderDocument.delete({
+    await prisma.resumeBuilderDocument.delete({
       where: { id: id },
     });
 

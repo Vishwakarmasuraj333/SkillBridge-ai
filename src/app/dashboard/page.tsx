@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyToken } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import Link from "next/link";
 import {
   FileText,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function DashboardOverview() {
   // 1. Authenticate user
@@ -35,42 +36,42 @@ export default async function DashboardOverview() {
   const userId = decoded.userId;
 
   // 2. Fetch stats
-  const totalResumes = await db.resume.count({
+  const totalResumes = await prisma.resume.count({
     where: { userId },
   });
 
-  const totalInterviews = await db.interviewQuestion.count({
+  const totalInterviews = await prisma.interviewQuestion.count({
     where: { userId },
   });
 
-  const totalCoverLetters = await db.coverLetter.count({
+  const totalCoverLetters = await prisma.coverLetter.count({
     where: { userId },
   });
 
-  const totalJobMatches = await db.resumeAnalysis.count({
+  const totalJobMatches = await prisma.resumeAnalysis.count({
     where: { userId, type: "JOB_MATCH" },
   });
 
-  const totalBuilderDocs = await db.resumeBuilderDocument.count({
+  const totalBuilderDocs = await prisma.resumeBuilderDocument.count({
     where: { userId },
   });
 
   // Calculate Average ATS score from standalone reviews
-  const avgScoreResult = await db.resumeAnalysis.aggregate({
+  const avgScoreResult = await prisma.resumeAnalysis.aggregate({
     where: { userId, type: "RESUME_ANALYSIS", score: { not: null } },
     _avg: { score: true },
   });
   const avgScore = avgScoreResult._avg.score ? Math.round(avgScoreResult._avg.score) : 0;
 
   // Fetch full user details to check premium badge
-  const fullUser = await db.user.findUnique({
+  const fullUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { isPremium: true, premiumUntil: true },
   });
   const isPremiumActive = !!(fullUser?.isPremium && (!fullUser.premiumUntil || new Date(fullUser.premiumUntil) > new Date()));
 
   // 3. Fetch recent analyses
-  const recentAnalyses = await db.resumeAnalysis.findMany({
+  const recentAnalyses = await prisma.resumeAnalysis.findMany({
     where: { userId },
     include: {
       resume: { select: { fileName: true, title: true } },
@@ -81,14 +82,14 @@ export default async function DashboardOverview() {
   });
 
   // Fetch recent builder documents
-  const recentBuilderDocs = await db.resumeBuilderDocument.findMany({
+  const recentBuilderDocs = await prisma.resumeBuilderDocument.findMany({
     where: { userId },
     orderBy: { updatedAt: "desc" },
     take: 3,
   });
 
   // 4. Fetch recent logs (Activity logs must be real newest first)
-  const recentLogs = await db.activityLog.findMany({
+  const recentLogs = await prisma.activityLog.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 5,

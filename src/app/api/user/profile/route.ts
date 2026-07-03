@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function PATCH(req: Request) {
   try {
@@ -18,7 +20,7 @@ export async function PATCH(req: Request) {
       );
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await prisma.user.update({
       where: {
         id: user.id,
       },
@@ -32,7 +34,7 @@ export async function PATCH(req: Request) {
       },
     });
 
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "UPDATE_PROFILE",

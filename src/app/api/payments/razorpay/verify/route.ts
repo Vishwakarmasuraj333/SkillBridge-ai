@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import crypto from "crypto";
 
 export async function POST(req: Request) {
@@ -28,12 +30,12 @@ export async function POST(req: Request) {
 
     if (expectedSignature === razorpay_signature) {
       // Find matching payment order
-      const existingPayment = await db.payment.findFirst({
+      const existingPayment = await prisma.payment.findFirst({
         where: { razorpayOrderId: razorpay_order_id, userId: user.id },
       });
 
       if (existingPayment) {
-        await db.payment.update({
+        await prisma.payment.update({
           where: { id: existingPayment.id },
           data: {
             razorpayPaymentId: razorpay_payment_id,
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
         });
       } else {
         // Create payment if not found
-        await db.payment.create({
+        await prisma.payment.create({
           data: {
             userId: user.id,
             razorpayOrderId: razorpay_order_id,
@@ -61,7 +63,7 @@ export async function POST(req: Request) {
       const premiumUntilDate = new Date();
       premiumUntilDate.setFullYear(premiumUntilDate.getFullYear() + 1);
 
-      await db.user.update({
+      await prisma.user.update({
         where: { id: user.id },
         data: {
           isPremium: true,
@@ -70,7 +72,7 @@ export async function POST(req: Request) {
       });
 
       // Log success
-      await db.activityLog.create({
+      await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "PAYMENT_SUCCESS",
@@ -82,12 +84,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: "Payment verified successfully!" });
     } else {
       // Signature mismatch
-      const existingPayment = await db.payment.findFirst({
+      const existingPayment = await prisma.payment.findFirst({
         where: { razorpayOrderId: razorpay_order_id, userId: user.id },
       });
 
       if (existingPayment) {
-        await db.payment.update({
+        await prisma.payment.update({
           where: { id: existingPayment.id },
           data: {
             status: "FAILED",
@@ -95,7 +97,7 @@ export async function POST(req: Request) {
         });
       }
 
-      await db.activityLog.create({
+      await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "PAYMENT_FAILED",

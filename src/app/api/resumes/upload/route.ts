@@ -1,6 +1,7 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { extractResumeText, ExtractionError } from "@/lib/resume-extractor";
 
 export const runtime = "nodejs";
@@ -115,7 +116,7 @@ export async function POST(req: Request) {
     const title = file.name.replace(/\.[^/.]+$/, "");
     
     try {
-      resume = await db.resume.create({
+      resume = await prisma.resume.create({
         data: {
           userId: user.id,
           title: title,
@@ -148,7 +149,7 @@ export async function POST(req: Request) {
     }
 
     // 5. Create ActivityLog
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "UPLOAD_RESUME",

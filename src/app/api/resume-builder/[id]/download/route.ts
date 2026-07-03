@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { generateResumePdfBuffer } from "@/lib/pdf-generator";
 import { renderResumeHtml } from "@/lib/resume-html";
 import { templatesList } from "@/components/resume-templates/templates";
@@ -17,16 +19,16 @@ export async function POST(
 
     const { id } = await params;
 
-    const document = await db.resumeBuilderDocument.findFirst({
+    const builderDoc = await prisma.resumeBuilderDocument.findFirst({
       where: { id: id, userId: user.id },
     });
 
-    if (!document) {
+    if (!builderDoc) {
       return NextResponse.json({ error: "Document not found." }, { status: 404 });
     }
 
     // Load full user details to check premium status
-    const fullUser = await db.user.findUnique({
+    const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: { isPremium: true, premiumUntil: true }
     });
@@ -34,14 +36,14 @@ export async function POST(
     const isPremiumUser = !!(fullUser?.isPremium && (!fullUser.premiumUntil || new Date(fullUser.premiumUntil) > new Date()));
 
     // Find template type (FREE or PREMIUM)
-    const templateInfo = templatesList.find(t => t.id === document.templateId);
+    const templateInfo = templatesList.find(t => t.id === builderDoc.templateId);
     const templateType = templateInfo?.type || "FREE";
 
     if (templateType === "PREMIUM" && !isPremiumUser) {
       return NextResponse.json({ error: "Premium template requires upgrade." }, { status: 403 });
     }
 
-    const structuredData = document.structuredData as any;
+    const structuredData = builderDoc.structuredData as any;
 
     // Build filename
     const fullName = structuredData?.personalInfo?.fullName || "Candidate";
@@ -51,15 +53,15 @@ export async function POST(
     const fileName = `${safeName}_Resume_${safeTemplate}.pdf`;
 
     // Render HTML and compile PDF buffer
-    const html = renderResumeHtml(document.templateId, structuredData, isPremiumUser);
+    const html = renderResumeHtml(builderDoc.templateId, structuredData, isPremiumUser);
     const pdfBuffer = await generateResumePdfBuffer({ html, fileName });
 
     // Add ActivityLog
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "DOWNLOAD_RESUME_PDF",
-        message: `Downloaded resume PDF for document: ${document.title}`,
+        message: `Downloaded resume PDF for document: ${builderDoc.title}`,
         details: `Template used: "${templateName}" (${templateType}). Filename: "${fileName}".`,
       },
     });

@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { generateInterviewQuestionsAI } from "@/lib/ai";
 
 export async function POST(req: Request) {
@@ -20,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch resume
-    const resume = await db.resume.findFirst({
+    const resume = await prisma.resume.findFirst({
       where: { id: resumeId, userId: user.id },
     });
 
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
     );
 
     // 3. Save to database
-    const savedInterview = await db.interviewQuestion.create({
+    const savedInterview = await prisma.interviewQuestion.create({
       data: {
         userId: user.id,
         resumeId: resume.id,
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
     });
 
     // 4. Log activity
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "GENERATE_INTERVIEW",

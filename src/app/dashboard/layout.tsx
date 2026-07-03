@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import DashboardSidebarClient from "@/components/dashboard/DashboardSidebarClient";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function DashboardLayout({
   children,
@@ -17,7 +20,7 @@ export default async function DashboardLayout({
   if (token) {
     const decoded = verifyToken(token);
     if (decoded) {
-      user = await db.user.findUnique({
+      user = await prisma.user.findUnique({
         where: { id: decoded.userId },
         select: { id: true, email: true, name: true },
       });

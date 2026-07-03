@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { cleanExtractedText } from "@/lib/pdf";
 
 export async function POST(req: Request) {
@@ -32,7 +34,7 @@ export async function POST(req: Request) {
     const cleanedText = cleanExtractedText(text);
 
     // 2. Save in database
-    const resume = await db.resume.create({
+    const resume = await prisma.resume.create({
       data: {
         userId: user.id,
         title: title.trim(),
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
     });
 
     // 3. Add ActivityLog
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "UPLOAD_RESUME",

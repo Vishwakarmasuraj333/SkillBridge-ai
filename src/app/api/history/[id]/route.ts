@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function DELETE(
   req: Request,
@@ -34,14 +36,14 @@ export async function DELETE(
 
     // 4. Perform deletion depending on type and ownership check
     if (type === "analysis") {
-      const item = await db.resumeAnalysis.findFirst({
+      const item = await prisma.resumeAnalysis.findFirst({
         where: { id: itemId, userId: user.id },
       });
       if (!item) {
         return NextResponse.json({ error: "Analysis history item not found." }, { status: 404 });
       }
-      await db.resumeAnalysis.delete({ where: { id: itemId } });
-      await db.activityLog.create({
+      await prisma.resumeAnalysis.delete({ where: { id: itemId } });
+      await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "DELETE_ANALYSIS",
@@ -49,14 +51,14 @@ export async function DELETE(
         },
       });
     } else if (type === "interview") {
-      const item = await db.interviewQuestion.findFirst({
+      const item = await prisma.interviewQuestion.findFirst({
         where: { id: itemId, userId: user.id },
       });
       if (!item) {
         return NextResponse.json({ error: "Interview coaching item not found." }, { status: 404 });
       }
-      await db.interviewQuestion.delete({ where: { id: itemId } });
-      await db.activityLog.create({
+      await prisma.interviewQuestion.delete({ where: { id: itemId } });
+      await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "DELETE_INTERVIEW",
@@ -64,14 +66,14 @@ export async function DELETE(
         },
       });
     } else if (type === "cover-letter") {
-      const item = await db.coverLetter.findFirst({
+      const item = await prisma.coverLetter.findFirst({
         where: { id: itemId, userId: user.id },
       });
       if (!item) {
         return NextResponse.json({ error: "Cover letter not found." }, { status: 404 });
       }
-      await db.coverLetter.delete({ where: { id: itemId } });
-      await db.activityLog.create({
+      await prisma.coverLetter.delete({ where: { id: itemId } });
+      await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "DELETE_COVER_LETTER",

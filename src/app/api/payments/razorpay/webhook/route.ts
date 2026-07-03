@@ -1,5 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import crypto from "crypto";
 
 export async function POST(req: Request) {
@@ -37,19 +39,19 @@ export async function POST(req: Request) {
       const email = paymentEntity.email;
 
       // Find matching user
-      const user = await db.user.findFirst({
+      const user = await prisma.user.findFirst({
         where: { email: email },
       });
 
       if (user) {
         // Find existing payment
-        const existingPayment = await db.payment.findFirst({
+        const existingPayment = await prisma.payment.findFirst({
           where: { razorpayOrderId: orderId, userId: user.id },
         });
 
         if (existingPayment) {
           if (existingPayment.status !== "PAID") {
-            await db.payment.update({
+            await prisma.payment.update({
               where: { id: existingPayment.id },
               data: {
                 razorpayPaymentId: paymentId,
@@ -58,7 +60,7 @@ export async function POST(req: Request) {
             });
           }
         } else {
-          await db.payment.create({
+          await prisma.payment.create({
             data: {
               userId: user.id,
               razorpayOrderId: orderId,
@@ -75,7 +77,7 @@ export async function POST(req: Request) {
         const premiumUntilDate = new Date();
         premiumUntilDate.setFullYear(premiumUntilDate.getFullYear() + 1);
 
-        await db.user.update({
+        await prisma.user.update({
           where: { id: user.id },
           data: {
             isPremium: true,
@@ -84,12 +86,12 @@ export async function POST(req: Request) {
         });
 
         // Add ActivityLog entry if not logged
-        const logExists = await db.activityLog.findFirst({
+        const logExists = await prisma.activityLog.findFirst({
           where: { userId: user.id, action: "PAYMENT_SUCCESS", details: { contains: paymentId } },
         });
 
         if (!logExists) {
-          await db.activityLog.create({
+          await prisma.activityLog.create({
             data: {
               userId: user.id,
               action: "PAYMENT_SUCCESS",
@@ -104,17 +106,17 @@ export async function POST(req: Request) {
       const orderId = paymentEntity.order_id;
       const email = paymentEntity.email;
 
-      const user = await db.user.findFirst({
+      const user = await prisma.user.findFirst({
         where: { email: email },
       });
 
       if (user) {
-        const existingPayment = await db.payment.findFirst({
+        const existingPayment = await prisma.payment.findFirst({
           where: { razorpayOrderId: orderId, userId: user.id },
         });
 
         if (existingPayment) {
-          await db.payment.update({
+          await prisma.payment.update({
             where: { id: existingPayment.id },
             data: {
               status: "FAILED",
@@ -122,7 +124,7 @@ export async function POST(req: Request) {
           });
         }
 
-        await db.activityLog.create({
+        await prisma.activityLog.create({
           data: {
             userId: user.id,
             action: "PAYMENT_FAILED",

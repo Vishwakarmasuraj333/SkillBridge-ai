@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function parseAiErrorMsg(err: any): string {
@@ -55,7 +57,7 @@ export async function GET(req: Request) {
     let dbConnected = false;
     let dbError: string | null = null;
     try {
-      await db.user.count();
+      await prisma.user.count();
       dbConnected = true;
     } catch (err: any) {
       dbError = err.message || "Failed to query database";

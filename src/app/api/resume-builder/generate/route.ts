@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { generateJSONWithAI } from "@/lib/ai";
 import { normalizeResumeData } from "@/lib/resume-normalizer";
 
@@ -16,7 +18,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Resume ID is required." }, { status: 400 });
     }
 
-    const resume = await db.resume.findFirst({
+    const resume = await prisma.resume.findFirst({
       where: { id: resumeId, userId: user.id },
     });
 
@@ -163,7 +165,7 @@ You MUST return a valid JSON object matching this schema exactly:
     }
 
     // Save ResumeBuilderDocument in MySQL
-    const doc = await db.resumeBuilderDocument.create({
+    const doc = await prisma.resumeBuilderDocument.create({
       data: {
         userId: user.id,
         resumeId: resume.id,
@@ -176,7 +178,7 @@ You MUST return a valid JSON object matching this schema exactly:
     });
 
     // Create ActivityLog entry
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "GENERATE_RESUME_BUILDER",

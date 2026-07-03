@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function PATCH(
   req: Request,
@@ -19,7 +21,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Content cannot be empty." }, { status: 400 });
     }
 
-    const coverLetter = await db.coverLetter.findFirst({
+    const coverLetter = await prisma.coverLetter.findFirst({
       where: {
         id,
         userId: user.id,
@@ -30,7 +32,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Cover letter not found." }, { status: 404 });
     }
 
-    const updated = await db.coverLetter.update({
+    const updated = await prisma.coverLetter.update({
       where: {
         id,
       },
@@ -40,7 +42,7 @@ export async function PATCH(
       },
     });
 
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "UPDATE_COVER_LETTER",

@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
@@ -10,7 +12,7 @@ export async function GET(req: Request) {
     }
 
     // 1. Fetch Resume Analyses (both standalone and job-matching ones)
-    const analyses = await db.resumeAnalysis.findMany({
+    const analyses = await prisma.resumeAnalysis.findMany({
       where: { userId: user.id },
       include: {
         resume: {
@@ -24,7 +26,7 @@ export async function GET(req: Request) {
     });
 
     // 2. Fetch Interview Coaching sessions
-    const interviews = await db.interviewQuestion.findMany({
+    const interviews = await prisma.interviewQuestion.findMany({
       where: { userId: user.id },
       include: {
         resume: {
@@ -35,7 +37,7 @@ export async function GET(req: Request) {
     });
 
     // 3. Fetch Cover Letters
-    const coverLetters = await db.coverLetter.findMany({
+    const coverLetters = await prisma.coverLetter.findMany({
       where: { userId: user.id },
       include: {
         resume: {
@@ -49,7 +51,7 @@ export async function GET(req: Request) {
     });
 
     // 4. Fetch Activity Logs
-    const activityLogs = await db.activityLog.findMany({
+    const activityLogs = await prisma.activityLog.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 100, // Keep to recent logs for dashboard display

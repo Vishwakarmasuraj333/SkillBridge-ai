@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { db } from "./db";
+import { prisma } from "./db";
 
 const JWT_SECRET = process.env.JWT_SECRET || "skillbridge_super_secret_jwt_key_2026";
 
@@ -53,7 +53,7 @@ export async function getAuthenticatedUser(req: Request) {
     const decoded = verifyToken(token);
     if (!decoded) return null;
 
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,

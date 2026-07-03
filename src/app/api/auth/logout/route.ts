@@ -1,14 +1,16 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
     const user = await getAuthenticatedUser(req);
     
     if (user) {
-      await db.activityLog.create({
+      await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "LOGOUT",

@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import Razorpay from "razorpay";
 
 export async function POST(req: Request) {
@@ -35,7 +37,7 @@ export async function POST(req: Request) {
     const order = await razorpayInstance.orders.create(options);
 
     // Save Payment record status CREATED
-    await db.payment.create({
+    await prisma.payment.create({
       data: {
         userId: user.id,
         provider: "RAZORPAY",
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
     });
 
     // Create ActivityLog entry
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "CREATE_PAYMENT_ORDER",

@@ -1,6 +1,8 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { generateCoverLetterAI } from "@/lib/ai";
 
 export async function POST(req: Request) {
@@ -20,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch resume
-    const resume = await db.resume.findFirst({
+    const resume = await prisma.resume.findFirst({
       where: { id: resumeId, userId: user.id },
     });
 
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
 
     // 2. Save job description to database
     const title = jobTitle || "Target Job Description";
-    const jobDescription = await db.jobDescription.create({
+    const jobDescription = await prisma.jobDescription.create({
       data: {
         userId: user.id,
         title,
@@ -46,7 +48,7 @@ export async function POST(req: Request) {
     });
 
     // 4. Save cover letter to database
-    const coverLetter = await db.coverLetter.create({
+    const coverLetter = await prisma.coverLetter.create({
       data: {
         userId: user.id,
         resumeId: resume.id,
@@ -59,7 +61,7 @@ export async function POST(req: Request) {
     });
 
     // 5. Create ActivityLog with action and message keys
-    await db.activityLog.create({
+    await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "GENERATE_COVER_LETTER",
