@@ -132,29 +132,24 @@ To deploy this project to Vercel:
 
 #### Required Vercel Environment Variables:
 ```env
-DATABASE_URL=mysql://USERNAME:PASSWORD@HOST:PORT/skillbridge_db?sslaccept=strict
+DATABASE_URL=mysql://USERNAME:PASSWORD@HOST:4000/skillbridge_db?sslaccept=strict&connection_limit=1&pool_timeout=20
 JWT_SECRET=production_secret
 GEMINI_API_KEY=your_gemini_key
 GEMINI_MODEL=gemini-2.5-flash
 APP_URL=https://skill-bridge-ai-omega.vercel.app
-```
-
-#### Optional Environment Variables:
-```env
-OPENAI_API_KEY=your_openai_key
+OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
-NEXT_PUBLIC_RAZORPAY_KEY_ID=
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
-RAZORPAY_WEBHOOK_SECRET=
 LOCAL_DEMO_PAYMENT=false
 ```
 
 > [!WARNING]
 > - **Database Configuration**: When setting up the TiDB connection, the database name in the Connect page must be `skillbridge_db`, not `sys`.
+> - **Public Endpoint**: Ensure that the "Public Endpoint" is enabled on your TiDB cluster.
+> - **Authorized Networks**: Ensure that you either allow all connections (`0.0.0.0/0`) or configure Authorized IP Networks to allow Vercel's serverless endpoints to connect.
 > - **Environment Values**: Vercel environment values should not include wrapping quotes (e.g. use `mysql://...` rather than `"mysql://..."`).
+> - **URL Encoding**: If your database password contains special characters (like `@`, `:`, `/`, `?`, `#`, `&`, `%`), they **must** be URL-encoded (e.g. `@` becomes `%40`).
 > - **Re-deployment**: After editing any environment variables on Vercel, you must redeploy the deployment manually for changes to take effect.
-> - **Database Sync**: Ensure you run `npx prisma db push` once locally with the target database URL to sync the schema models and create the tables in your cloud database before launching the site.
+> - **Database Sync**: Run `npx prisma db push` once locally with the target database URL to sync the schema models and create the tables in your cloud database before launching.
 
 ---
 

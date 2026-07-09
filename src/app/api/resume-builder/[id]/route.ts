@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { templatesList } from "@/components/resume-templates/templates";
 
 export async function GET(
   req: Request,
@@ -55,7 +56,13 @@ export async function PATCH(
     // Only allow updating title, templateId, templateType, structuredData, htmlSnapshot
     const dataToUpdate: any = {};
     if (body.title !== undefined) dataToUpdate.title = body.title;
-    if (body.templateId !== undefined) dataToUpdate.templateId = body.templateId;
+    if (body.templateId !== undefined) {
+      dataToUpdate.templateId = body.templateId;
+      const tInfo = templatesList.find(t => t.id === body.templateId);
+      if (tInfo) {
+        dataToUpdate.templateType = tInfo.type;
+      }
+    }
     if (body.templateType !== undefined) dataToUpdate.templateType = body.templateType;
     if (body.structuredData !== undefined) dataToUpdate.structuredData = body.structuredData;
     if (body.htmlSnapshot !== undefined) dataToUpdate.htmlSnapshot = body.htmlSnapshot;

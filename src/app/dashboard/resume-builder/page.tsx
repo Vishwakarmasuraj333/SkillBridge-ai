@@ -136,7 +136,7 @@ function ResumeBuilderContent() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const isPremiumUser = !!(user?.isPremium && (!user.premiumUntil || new Date(user.premiumUntil) > new Date()));
+  const isPremiumUser = true;
 
   if (loading || generating) {
     return (

@@ -316,22 +316,14 @@ export default function SettingsPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                <div className="space-y-2">
-                  <p className="text-sm font-bold">Unlock Professional Extras</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Gain lifetime access to all 10 premium templates, one-page design, advanced AI builder improvement rewrite features, and remove PDF watermarks.
-                  </p>
-                </div>
-                <div className="flex justify-end shrink-0">
-                  <button
-                    onClick={() => setShowUpgradeModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg transition-all cursor-pointer w-full sm:w-auto text-center justify-center"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    <span>Unlock Premium for ₹199</span>
-                  </button>
-                </div>
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 dark:text-emerald-400">
+                <p className="text-sm font-bold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
+                  <span>All templates are currently free for portfolio/demo launch.</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  Enjoy premium designs, unlimited export, and advanced AI builder features without any payment during our launch period.
+                </p>
               </div>
             )}
           </div>

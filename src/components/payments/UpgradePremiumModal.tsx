@@ -155,68 +155,24 @@ export default function UpgradePremiumModal({ isOpen, onClose, onSuccess }: Upgr
           </div>
         ) : (
           <div className="space-y-5">
+            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 dark:text-emerald-400">
+              <p className="text-sm font-bold flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
+                <span>All templates are currently free for portfolio/demo launch.</span>
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Unlock the full potential of SkillBridge AI. Upgrade today to compile professional resumes that stand out.
+              No payments are required during our portfolio launch period. You have full access to all 10 professional layouts, advanced AI writing, and clean exports.
             </p>
 
-            <div className="space-y-3">
-              <div className="flex gap-3 items-start">
-                <span className="p-1 rounded bg-primary/10 text-primary text-xs font-bold mt-0.5">✓</span>
-                <div>
-                  <p className="text-xs font-semibold">Unlock 7 Premium Templates</p>
-                  <p className="text-[10px] text-muted-foreground">Gain full access to Developer Dark, Creative Sidebar, Tech Gradient, and more.</p>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start">
-                <span className="p-1 rounded bg-primary/10 text-primary text-xs font-bold mt-0.5">✓</span>
-                <div>
-                  <p className="text-xs font-semibold">Advanced AI Resume Rewrite</p>
-                  <p className="text-[10px] text-muted-foreground">Improve wording, vocabulary, and keywords tailored for specific target roles.</p>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start">
-                <span className="p-1 rounded bg-primary/10 text-primary text-xs font-bold mt-0.5">✓</span>
-                <div>
-                  <p className="text-xs font-semibold">Professional PDF Export</p>
-                  <p className="text-[10px] text-muted-foreground">Export high-resolution PDFs without any watermark.</p>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start">
-                <span className="p-1 rounded bg-primary/10 text-primary text-xs font-bold mt-0.5">✓</span>
-                <div>
-                  <p className="text-xs font-semibold">No Watermark</p>
-                  <p className="text-[10px] text-muted-foreground">Clean output ready to submit directly to recruiters.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-secondary/40 border border-border rounded-xl flex items-center justify-between">
-              <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Premium Access</span>
-                <p className="text-xl font-extrabold">₹199 <span className="text-xs font-normal text-muted-foreground">one-time</span></p>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-semibold">
-                <Shield className="h-3.5 w-3.5 text-primary" />
-                <span>Secure Payment</span>
-              </div>
-            </div>
-
             <button
-              onClick={handleUpgrade}
-              disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 cursor-pointer"
+              onClick={() => {
+                onSuccess();
+                onClose();
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md cursor-pointer"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Configuring Order...</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-4 w-4" />
-                  <span>Unlock Premium ₹199</span>
-                </>
-              )}
+              <span>Start Building for Free</span>
             </button>
           </div>
         )}

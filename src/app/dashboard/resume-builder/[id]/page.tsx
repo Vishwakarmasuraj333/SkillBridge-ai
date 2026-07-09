@@ -55,6 +55,7 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
 
   // Navigation track
   const [activeEditorTab, setActiveEditorTab] = useState("personalInfo");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const fetchData = async () => {
     try {
@@ -85,7 +86,7 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
     fetchData();
   }, [id]);
 
-  const isPremiumUser = !!(user?.isPremium && (!user.premiumUntil || new Date(user.premiumUntil) > new Date()));
+  const isPremiumUser = true;
 
   // Editor modification updates
   const handleUpdateField = (section: string, field: string, value: any) => {
@@ -430,111 +431,221 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
             {/* Templates Grid Tab */}
             {activeEditorTab === "templates" && (
               <div className="space-y-4 animate-zoom-in">
-                <h3 className="text-sm font-bold border-b border-border pb-1">Choose Resume Layout</h3>
-                <p className="text-xs text-muted-foreground">Select one of our 10 professional resume designs. Premium templates require an active upgrade.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  {templatesList.map((t) => {
-                    const isPremium = t.type === "PREMIUM";
-                    const isLocked = isPremium && !isPremiumUser;
-                    const isActive = t.id === templateId;
-                    return (
-                      <button
-                        key={t.id}
-                        onClick={() => handleTemplateChange(t.id)}
-                        className={`group relative flex flex-col text-left rounded-2xl border bg-card p-4 transition-all duration-300 hover:shadow-lg cursor-pointer ${
-                          isActive
-                            ? "border-primary ring-2 ring-primary/20 bg-primary/[0.02]"
-                            : "border-border hover:border-primary/40"
-                        }`}
-                      >
-                        {/* Mock design representation box */}
-                        <div className="w-full h-24 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden bg-secondary/50 border border-border">
-                          {t.id === "developer-dark" ? (
-                            <div className="absolute inset-0 bg-zinc-900 font-mono text-[6px] p-2 text-emerald-400 select-none">
-                              &gt; cat developer.md<br/>
-                              # Profile<br/>
-                              Developer Profile...
-                            </div>
-                          ) : t.id === "tech-gradient" ? (
-                            <div className="absolute inset-0 bg-white flex flex-col">
-                              <div className="w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
-                              <div className="flex-1 p-2 flex flex-col justify-between">
-                                <div className="h-2 w-12 bg-blue-300 rounded" />
-                                <div className="space-y-1">
-                                  <div className="h-1.5 w-full bg-zinc-200 rounded" />
-                                  <div className="h-1.5 w-5/6 bg-zinc-200 rounded" />
-                                </div>
-                              </div>
-                            </div>
-                          ) : t.id === "creative-sidebar" ? (
-                            <div className="absolute inset-0 flex bg-white">
-                              <div className="w-1/3 bg-slate-900 p-1 flex flex-col gap-1">
-                                <div className="h-1.5 w-full bg-slate-400 rounded-sm" />
-                                <div className="h-1 w-2/3 bg-slate-600 rounded-sm" />
-                              </div>
-                              <div className="flex-1 p-2 space-y-1">
-                                <div className="h-2 w-1/2 bg-slate-400 rounded" />
-                                <div className="h-1.5 w-full bg-zinc-200 rounded" />
-                                <div className="h-1.5 w-full bg-zinc-200 rounded" />
-                              </div>
-                            </div>
-                          ) : t.id === "corporate-elite" ? (
-                            <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white">
-                              <div className="border-b-2 border-indigo-900 pb-1 flex justify-between">
-                                <div className="h-2 w-1/3 bg-indigo-900 rounded" />
-                                <div className="h-1.5 w-1/4 bg-zinc-400 rounded" />
-                              </div>
-                              <div className="space-y-1">
-                                <div className="h-1.5 w-full bg-zinc-300 rounded" />
-                                <div className="h-1.5 w-5/6 bg-zinc-300 rounded" />
-                              </div>
-                            </div>
-                          ) : t.id === "classic-clean" || t.id === "elegant-serif" ? (
-                            <div className="absolute inset-0 p-2 flex flex-col justify-between items-center text-center bg-white">
-                              <div className="space-y-1">
-                                <div className="h-2 w-16 bg-zinc-700 rounded" />
-                                <div className="h-1.5 w-24 bg-zinc-400 rounded" />
-                              </div>
-                              <div className="h-1.5 w-full bg-zinc-200 rounded" />
-                            </div>
-                          ) : (
-                            <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white">
-                              <div className="flex gap-2">
-                                <div className="h-2.5 w-2.5 bg-blue-500 rounded-full shrink-0" />
-                                <div className="h-2 w-1/2 bg-zinc-600 rounded" />
-                              </div>
-                              <div className="space-y-1">
-                                <div className="h-1.5 w-full bg-zinc-200 rounded" />
-                                <div className="h-1.5 w-5/6 bg-zinc-200 rounded" />
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Locked icon overlay */}
-                          {isLocked && (
-                            <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex items-center justify-center text-white">
-                              <div className="p-2 bg-black/75 rounded-full border border-white/20">
-                                <Lock className="h-4 w-4 text-amber-400" />
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                <div>
+                  <h3 className="text-sm font-bold border-b border-border pb-1">Choose Resume Layout</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Select one of our 10 professional resume designs. All templates are currently free for portfolio launch.</p>
+                </div>
 
-                        {/* Text info */}
-                        <div className="flex justify-between items-start w-full">
-                          <h4 className="font-bold text-xs group-hover:text-primary transition-colors">{t.name}</h4>
-                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                            isPremium
-                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                              : "bg-zinc-500/10 text-zinc-500 border border-border"
-                          }`}>
-                            {t.type}
-                          </span>
+                {/* Category filters */}
+                <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none shrink-0 border-b border-border/50">
+                  {["All", "ATS Friendly", "Modern", "Developer", "Executive", "Creative"].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1 text-[10px] font-extrabold rounded-lg border transition-all cursor-pointer whitespace-nowrap ${
+                        selectedCategory === cat
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  {templatesList
+                    .filter(t => selectedCategory === "All" || (t as any).category === selectedCategory)
+                    .map((t) => {
+                      const isActive = t.id === templateId;
+                      let gradientBorder = "border-border hover:border-indigo-500/40";
+                      let glowBg = "bg-card";
+                      if (isActive) {
+                        gradientBorder = "border-primary ring-2 ring-primary/20 bg-primary/[0.01]";
+                      } else {
+                        if (t.id === "developer-dark") {
+                          gradientBorder = "border-border hover:border-emerald-500/40";
+                        } else if (t.id === "tech-gradient") {
+                          gradientBorder = "border-border hover:border-purple-500/40";
+                        } else if (t.id === "creative-sidebar") {
+                          gradientBorder = "border-border hover:border-pink-500/40";
+                        } else if (t.id === "corporate-elite") {
+                          gradientBorder = "border-border hover:border-blue-500/40";
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={t.id}
+                          className={`group relative flex flex-col justify-between rounded-2xl border p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${glowBg} ${gradientBorder} ${
+                            isActive ? "shadow-md shadow-primary/5" : ""
+                          }`}
+                        >
+                          <div>
+                            {/* Mock design representation box */}
+                            <div className="w-full h-24 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden bg-secondary/50 border border-border shadow-inner">
+                              {t.id === "classic-clean" ? (
+                                <div className="absolute inset-0 p-2 flex flex-col justify-between items-center text-center bg-white font-serif select-none">
+                                  <div className="space-y-0.5 mt-1">
+                                    <div className="h-1.5 w-16 bg-zinc-800 rounded mx-auto" />
+                                    <div className="h-1 w-24 bg-zinc-400 rounded mx-auto" />
+                                  </div>
+                                  <div className="w-full space-y-1 my-1">
+                                    <div className="h-0.5 w-full bg-zinc-200 rounded" />
+                                    <div className="h-1 w-full bg-zinc-100 rounded" />
+                                    <div className="h-1 w-5/6 bg-zinc-100 rounded" />
+                                  </div>
+                                  <div className="h-1 w-8 bg-zinc-300 rounded" />
+                                </div>
+                              ) : t.id === "modern-blue" ? (
+                                <div className="absolute inset-0 p-2.5 flex flex-col justify-between bg-white font-sans select-none border-l-4 border-blue-600">
+                                  <div>
+                                    <div className="h-2 w-20 bg-zinc-850 rounded" />
+                                    <div className="h-1 w-12 bg-blue-500 rounded mt-1" />
+                                  </div>
+                                  <div className="space-y-1 w-full">
+                                    <div className="h-1 w-full bg-zinc-105 rounded" />
+                                    <div className="h-1 w-4/5 bg-zinc-105 rounded" />
+                                  </div>
+                                </div>
+                              ) : t.id === "minimal-ats" ? (
+                                <div className="absolute inset-0 p-3 flex flex-col justify-between bg-white font-mono select-none">
+                                  <div className="text-center space-y-1">
+                                    <div className="h-1.5 w-24 bg-zinc-900 rounded mx-auto" />
+                                    <div className="h-1 w-32 bg-zinc-400 rounded mx-auto" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="h-1 w-full bg-zinc-100 rounded" />
+                                    <div className="h-1 w-full bg-zinc-100 rounded" />
+                                  </div>
+                                </div>
+                              ) : t.id === "executive-pro" ? (
+                                <div className="absolute inset-0 p-2.5 flex flex-col justify-between bg-white font-serif select-none">
+                                  <div className="border-b border-zinc-850 pb-1.5 w-full">
+                                    <div className="h-2 w-24 bg-zinc-900 rounded" />
+                                    <div className="h-1 w-16 bg-zinc-550 rounded mt-1" />
+                                  </div>
+                                  <div className="space-y-1.5 w-full">
+                                    <div className="h-1.5 w-full bg-zinc-100 rounded" />
+                                    <div className="h-1.5 w-5/6 bg-zinc-100 rounded" />
+                                  </div>
+                                </div>
+                              ) : t.id === "creative-sidebar" ? (
+                                <div className="absolute inset-0 flex bg-white font-sans select-none">
+                                  <div className="w-1/3 bg-slate-900 p-2 flex flex-col gap-1.5 text-white">
+                                    <div className="h-2 w-full bg-slate-400 rounded-sm" />
+                                    <div className="h-1.5 w-2/3 bg-slate-600 rounded-sm" />
+                                    <div className="mt-auto h-1.5 w-4/5 bg-slate-750 rounded-sm" />
+                                  </div>
+                                  <div className="flex-1 p-2.5 space-y-2">
+                                    <div className="h-2.5 w-1/2 bg-slate-800 rounded" />
+                                    <div className="space-y-1">
+                                      <div className="h-1.5 w-full bg-zinc-100 rounded" />
+                                      <div className="h-1.5 w-full bg-zinc-100 rounded" />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : t.id === "developer-dark" ? (
+                                <div className="absolute inset-0 bg-zinc-950 font-mono text-[5.5px] p-2 text-emerald-450 border border-zinc-900 select-none">
+                                  <div className="flex gap-1 mb-1 opacity-70">
+                                    <span className="h-1 w-1 rounded-full bg-red-500" />
+                                    <span className="h-1 w-1 rounded-full bg-yellow-500" />
+                                    <span className="h-1 w-1 rounded-full bg-green-500" />
+                                  </div>
+                                  <span className="text-blue-400">&gt; cat dev.md</span><br/>
+                                  <span className="text-white"># Suraj V.</span><br/>
+                                  <span className="text-zinc-550">// Software Eng</span>
+                                </div>
+                              ) : t.id === "corporate-elite" ? (
+                                <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white font-sans select-none">
+                                  <div className="bg-slate-900 p-1.5 rounded flex justify-between items-center text-white w-full">
+                                    <div className="h-2 w-16 bg-white rounded" />
+                                    <div className="h-1 w-8 bg-blue-300 rounded" />
+                                  </div>
+                                  <div className="space-y-1 w-full">
+                                    <div className="h-1.5 w-full bg-zinc-100 rounded" />
+                                    <div className="h-1.5 w-5/6 bg-zinc-100 rounded" />
+                                  </div>
+                                </div>
+                              ) : t.id === "elegant-serif" ? (
+                                <div className="absolute inset-0 p-2 flex flex-col justify-between items-center text-center bg-white font-serif select-none">
+                                  <div className="space-y-1 mt-1 border-b border-zinc-200 pb-1.5 w-full">
+                                    <div className="h-2 w-20 bg-zinc-850 rounded mx-auto" />
+                                    <div className="h-1 w-12 bg-zinc-400 rounded mx-auto" />
+                                  </div>
+                                  <div className="space-y-1 w-full my-1">
+                                    <div className="h-1 w-full bg-zinc-100 rounded" />
+                                    <div className="h-1 w-full bg-zinc-100 rounded" />
+                                  </div>
+                                </div>
+                              ) : t.id === "tech-gradient" ? (
+                                <div className="absolute inset-0 bg-zinc-900 border border-zinc-800 p-2.5 flex flex-col justify-between select-none">
+                                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+                                  <div className="mt-1">
+                                    <div className="h-2 w-16 bg-white rounded" />
+                                    <div className="h-1 w-10 bg-zinc-500 rounded mt-1" />
+                                  </div>
+                                  <div className="flex gap-1 flex-wrap">
+                                    <div className="h-1.5 w-5 bg-blue-500/20 border border-blue-500/30 rounded" />
+                                    <div className="h-1.5 w-7 bg-indigo-500/20 border border-indigo-500/30 rounded" />
+                                  </div>
+                                </div>
+                              ) : t.id === "compact-one-page" ? (
+                                <div className="absolute inset-0 p-2.5 flex flex-col justify-between bg-white font-sans select-none">
+                                  <div className="flex justify-between items-center border-b pb-1">
+                                    <div className="h-2 w-16 bg-zinc-800 rounded" />
+                                    <div className="h-1 w-10 bg-zinc-400 rounded" />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <div className="h-1 w-full bg-zinc-105 rounded" />
+                                    <div className="h-1 w-full bg-zinc-105 rounded" />
+                                    <div className="h-1 w-full bg-zinc-105 rounded" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white select-none">
+                                  <div className="flex gap-2">
+                                    <div className="h-2.5 w-2.5 bg-blue-500 rounded-full shrink-0" />
+                                    <div className="h-2 w-1/2 bg-zinc-650 rounded" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="h-1.5 w-full bg-zinc-105 rounded" />
+                                    <div className="h-1.5 w-5/6 bg-zinc-105 rounded" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Text info */}
+                            <div className="flex justify-between items-start w-full gap-2">
+                              <div>
+                                <h4 className="font-bold text-xs group-hover:text-primary transition-colors text-foreground">{t.name}</h4>
+                                <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5 block">{(t as any).category}</span>
+                              </div>
+                              <span className="px-1.5 py-0.5 rounded-full text-[8px] font-extrabold tracking-wider bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 uppercase shrink-0">
+                                Free
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1.5 leading-normal line-clamp-2">{t.description}</p>
+                          </div>
+
+                          <div className="mt-4 flex gap-2 w-full">
+                            <button
+                              type="button"
+                              onClick={() => handleTemplateChange(t.id)}
+                              className={`flex-1 py-2 rounded-xl text-[10px] font-bold text-center transition-all cursor-pointer ${
+                                isActive
+                                  ? "bg-primary text-primary-foreground border border-primary shadow-sm"
+                                  : "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
+                              }`}
+                            >
+                              {isActive ? "Active Layout" : "Use Template"}
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1 leading-normal line-clamp-2">{t.description}</p>
-                      </button>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               </div>
             )}

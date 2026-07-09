@@ -5,8 +5,9 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Use a fallback URL if DATABASE_URL is not set, so build doesn't fail on missing env
-const connectionString = process.env.DATABASE_URL || "mysql://root:password@localhost:3306/skillbridge_db";
+const connectionString =
+  process.env.DATABASE_URL ||
+  "mysql://root:password@localhost:3306/skillbridge_db";
 
 const adapter = new PrismaMariaDb(connectionString);
 

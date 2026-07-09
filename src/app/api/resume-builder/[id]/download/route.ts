@@ -33,7 +33,7 @@ export async function POST(
       select: { isPremium: true, premiumUntil: true }
     });
 
-    const isPremiumUser = !!(fullUser?.isPremium && (!fullUser.premiumUntil || new Date(fullUser.premiumUntil) > new Date()));
+    const isPremiumUser = true;
 
     // Find template type (FREE or PREMIUM)
     const templateInfo = templatesList.find(t => t.id === builderDoc.templateId);
