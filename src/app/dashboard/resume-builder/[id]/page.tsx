@@ -356,7 +356,7 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
             >
               {templatesList.map(t => (
                 <option key={t.id} value={t.id}>
-                  {t.name} {t.type === "PREMIUM" && !isPremiumUser ? "🔒" : ""}
+                  {t.name}
                 </option>
               ))}
             </select>

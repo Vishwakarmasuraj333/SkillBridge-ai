@@ -209,17 +209,18 @@ function ResumeBuilderContent() {
         <div className="p-5 rounded-2xl bg-card border border-border flex items-center justify-between shadow-sm">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-muted-foreground">Plan Status</p>
-            <p className="text-xl font-bold">{isPremiumUser ? "Premium Unlocked" : "Free Plan"}</p>
+            <p className="text-xl font-bold">Free Plan Active</p>
+            <p className="text-[10px] text-emerald-500 font-medium">unlimited PDF exports enabled</p>
           </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500 shrink-0">
+          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0">
             <Sparkles className="h-5 w-5" />
           </div>
         </div>
 
         <div className="p-5 rounded-2xl bg-gradient-to-br from-primary/10 to-indigo-500/5 border border-primary/20 flex flex-col justify-center">
-          <p className="text-xs font-bold text-primary">Resume Template Access</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {isPremiumUser ? "All 10 professional layouts active." : "3 free templates active. Unlock 7 premium formats."}
+          <p className="text-xs font-bold text-primary">Pro Plan Coming Soon</p>
+          <p className="text-[10px] text-muted-foreground mt-1 leading-normal">
+            Advanced AI rewriting, premium cover letter styles, more export formats, and priority AI generation.
           </p>
         </div>
       </div>

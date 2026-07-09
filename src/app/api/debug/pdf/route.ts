@@ -1,8 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { renderToBuffer } from "@react-pdf/renderer";
-import { ResumePdfDocument } from "@/lib/pdf/resume-pdf-document";
+import { generateResumePdfBuffer } from "@/lib/pdf/generate-resume-pdf";
 import { StructuredResumeData } from "@/components/resume-templates/types";
 
 export async function GET() {
@@ -11,7 +10,7 @@ export async function GET() {
       personalInfo: {
         fullName: "Suraj Vishwakarma",
         jobTitle: "Full Stack Developer",
-        email: "suraj@example.com",
+        email: "itxsurajofficial@gmail.com",
         phone: "+91 9999999999",
         location: "Mumbai, India",
         linkedin: "linkedin.com/in/suraj",
@@ -87,9 +86,10 @@ export async function GET() {
       ]
     };
 
-    const pdfBuffer = await renderToBuffer(
-      <ResumePdfDocument data={sampleData} templateId="classic-clean" />
-    );
+    const pdfBuffer = await generateResumePdfBuffer({
+      data: sampleData,
+      templateId: "classic-clean",
+    });
 
     return new Response(new Uint8Array(pdfBuffer), {
       status: 200,

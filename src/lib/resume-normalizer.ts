@@ -1,3 +1,52 @@
+export interface NormalizedResumeData {
+  personalInfo: {
+    fullName: string;
+    jobTitle: string;
+    email: string;
+    phone: string;
+    location: string;
+    linkedin: string;
+    github: string;
+    portfolio: string;
+  };
+  summary: string;
+  skills: {
+    frontend: string[];
+    backend: string[];
+    database: string[];
+    tools: string[];
+    other: string[];
+  };
+  experience: Array<{
+    role: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    bullets: string[];
+  }>;
+  projects: Array<{
+    name: string;
+    techStack: string[];
+    description: string;
+    bullets: string[];
+  }>;
+  education: Array<{
+    degree: string;
+    institution: string;
+    year: string;
+    score?: string;
+  }>;
+  certifications: Array<{
+    name: string;
+    issuer: string;
+    year: string;
+  }>;
+  achievements: string[];
+  languages: string[];
+  keywords: string[];
+}
+
 export function renderText(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
@@ -21,15 +70,13 @@ export function renderText(value: unknown): string {
   return "";
 }
 
-export function normalizeStringArray(value: any): string[] {
+export function safeArray(value: unknown): string[] {
   if (!value) return [];
-  if (!Array.isArray(value)) {
-    const single = renderText(value);
-    return single ? [single] : [];
+  if (Array.isArray(value)) {
+    return value.map(item => renderText(item).trim()).filter(Boolean);
   }
-  return value
-    .map(item => renderText(item).trim())
-    .filter(Boolean);
+  const single = renderText(value).trim();
+  return single ? [single] : [];
 }
 
 export function normalizeCertification(value: any): { name: string; issuer: string; year: string } {
@@ -69,7 +116,7 @@ export function normalizeExperience(value: any): any {
     location: renderText(value.location || value.city || ""),
     startDate: renderText(value.startDate || value.start || ""),
     endDate: renderText(value.endDate || value.end || ""),
-    bullets: normalizeStringArray(value.bullets || value.description || value.highlights || [])
+    bullets: safeArray(value.bullets || value.description || value.highlights || [])
   };
 }
 
@@ -84,9 +131,9 @@ export function normalizeProject(value: any): any {
   }
   return {
     name: renderText(value.name || value.title || ""),
-    techStack: normalizeStringArray(value.techStack || value.technologies || value.skills || []),
+    techStack: safeArray(value.techStack || value.technologies || value.skills || []),
     description: renderText(value.description || value.summary || ""),
-    bullets: normalizeStringArray(value.bullets || value.highlights || [])
+    bullets: safeArray(value.bullets || value.highlights || [])
   };
 }
 
@@ -107,8 +154,8 @@ export function normalizeEducation(value: any): any {
   };
 }
 
-export function normalizeResumeData(data: any): any {
-  if (!data) {
+export function normalizeResumeData(data: unknown): any {
+  if (!data || typeof data !== "object") {
     return {
       personalInfo: {
         fullName: "",
@@ -138,8 +185,10 @@ export function normalizeResumeData(data: any): any {
     };
   }
 
+  const raw = data as Record<string, any>;
+
   // Personal Info
-  const rawPersonalInfo = data.personalInfo || {};
+  const rawPersonalInfo = raw.personalInfo || {};
   const personalInfo = {
     fullName: renderText(rawPersonalInfo.fullName || ""),
     jobTitle: renderText(rawPersonalInfo.jobTitle || ""),
@@ -152,46 +201,46 @@ export function normalizeResumeData(data: any): any {
   };
 
   // Summary
-  const summary = renderText(data.summary || "");
+  const summary = renderText(raw.summary || "");
 
   // Skills
-  const rawSkills = data.skills || {};
+  const rawSkills = raw.skills || {};
   const skills = {
-    frontend: normalizeStringArray(rawSkills.frontend || []),
-    backend: normalizeStringArray(rawSkills.backend || []),
-    database: normalizeStringArray(rawSkills.database || []),
-    tools: normalizeStringArray(rawSkills.tools || []),
-    other: normalizeStringArray(rawSkills.other || [])
+    frontend: safeArray(rawSkills.frontend || []),
+    backend: safeArray(rawSkills.backend || []),
+    database: safeArray(rawSkills.database || []),
+    tools: safeArray(rawSkills.tools || []),
+    other: safeArray(rawSkills.other || [])
   };
 
   // Experience
-  const experience = Array.isArray(data.experience)
-    ? data.experience.map(normalizeExperience)
+  const experience = Array.isArray(raw.experience)
+    ? raw.experience.map(normalizeExperience)
     : [];
 
   // Projects
-  const projects = Array.isArray(data.projects)
-    ? data.projects.map(normalizeProject)
+  const projects = Array.isArray(raw.projects)
+    ? raw.projects.map(normalizeProject)
     : [];
 
   // Education
-  const education = Array.isArray(data.education)
-    ? data.education.map(normalizeEducation)
+  const education = Array.isArray(raw.education)
+    ? raw.education.map(normalizeEducation)
     : [];
 
   // Certifications
-  const certifications = Array.isArray(data.certifications)
-    ? data.certifications.map(normalizeCertification)
+  const certifications = Array.isArray(raw.certifications)
+    ? raw.certifications.map(normalizeCertification)
     : [];
 
   // Achievements
-  const achievements = normalizeStringArray(data.achievements || []);
+  const achievements = safeArray(raw.achievements || []);
 
   // Languages
-  const languages = normalizeStringArray(data.languages || []);
+  const languages = safeArray(raw.languages || []);
 
   // Keywords
-  const keywords = normalizeStringArray(data.keywords || []);
+  const keywords = safeArray(raw.keywords || []);
 
   return {
     personalInfo,
@@ -205,4 +254,8 @@ export function normalizeResumeData(data: any): any {
     languages,
     keywords
   };
+}
+
+export function normalizeStringArray(value: any): string[] {
+  return safeArray(value);
 }
