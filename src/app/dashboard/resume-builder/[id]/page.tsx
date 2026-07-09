@@ -25,6 +25,7 @@ import UpgradeModal from "@/components/dashboard/UpgradeModal";
 import { templatesList } from "@/components/resume-templates/templates";
 import { templatesListRegistry } from "@/lib/resume-templates/template-registry";
 import { normalizeResumeData } from "@/lib/resume-normalizer";
+import { generateClientResumePdf } from "@/lib/pdf/client-resume-pdf";
 
 export default function ResumeEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -224,76 +225,100 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
       setError("Save or generate resume first.");
       return;
     }
+    console.error("[EXPORT_PDF_CLICK]", { documentId: id, templateId });
     setDownloading(true);
     setError("");
     setSuccess("");
+
     try {
-      // First save current edits
-      await fetch(`/api/resume-builder/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          templateId,
-          structuredData,
-        }),
-      });
+      // First try to save the edits
+      try {
+        await fetch(`/api/resume-builder/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            templateId,
+            structuredData,
+          }),
+        });
+      } catch (saveError) {
+        console.warn("[PDF_SAVE_BEFORE_DOWNLOAD_WARNING] Auto-saving failed, attempting download anyway:", saveError);
+      }
 
-      const res = await fetch(`/api/resume-builder/${id}/download`, {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
+      let downloaded = false;
 
-      const contentType = res.headers.get("content-type") || "";
+      // 1. Try server API download first
+      try {
+        const res = await fetch(`/api/resume-builder/${id}/download`, {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
 
-      if (!res.ok) {
-        let errMsg = "Unable to download PDF. Please try again.";
-        if (contentType.includes("application/json")) {
-          try {
-            const errData = await res.json();
-            errMsg = errData.message || errData.error || errMsg;
-          } catch (_) {}
+        const contentType = res.headers.get("content-type") || "";
+
+        if (res.ok && contentType.includes("application/pdf")) {
+          const blob = await res.blob();
+          if (blob && blob.size > 1000) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            const contentDisposition = res.headers.get("content-disposition");
+            let filename = `skillbridge-resume-${Date.now()}.pdf`;
+            if (contentDisposition) {
+              const matches = /filename="([^"]+)"/.exec(contentDisposition);
+              if (matches && matches[1]) {
+                filename = matches[1];
+              }
+            }
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            downloaded = true;
+          }
         } else {
-          try {
-            const rawText = await res.text();
-            if (rawText) errMsg = rawText;
-          } catch (__) {}
+          const text = await res.text().catch(() => "");
+          console.error("[EXPORT_PDF_API_ERROR]", {
+            status: res.status,
+            contentType,
+            textPreview: text.slice(0, 500),
+          });
         }
-        throw new Error(errMsg);
+      } catch (serverError) {
+        console.error("[SERVER_PDF_REQUEST_FAILED]", serverError);
       }
 
-      if (!contentType.includes("application/pdf")) {
-        const text = await res.text().catch(() => "");
-        console.error("[PDF_DOWNLOAD_NON_PDF_RESPONSE]", text.slice(0, 500));
-        throw new Error("PDF file was not returned by the server.");
-      }
+      // 2. Fallback to client-side pdf-lib compiler if server download failed or returned invalid format
+      if (!downloaded) {
+        console.log("[CLIENT_PDF_FALLBACK] Initiating local browser compiler...");
+        const normalizedData = normalizeResumeData(structuredData);
+        const pdfBytes = await generateClientResumePdf({
+          data: normalizedData,
+          templateId,
+        });
 
-      const blob = await res.blob();
-      if (!blob || blob.size < 1000) {
-        throw new Error("PDF file is empty or invalid.");
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      // Get filename from response header or compute fallback
-      const contentDisposition = res.headers.get("content-disposition");
-      let filename = `skillbridge-resume-${Date.now()}.pdf`;
-      if (contentDisposition) {
-        const matches = /filename="([^"]+)"/.exec(contentDisposition);
-        if (matches && matches[1]) {
-          filename = matches[1];
+        const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+        if (blob.size < 1000) {
+          throw new Error("Generated PDF is empty.");
         }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `skillbridge-resume-${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        downloaded = true;
       }
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+
       setSuccess("PDF downloaded successfully.");
     } catch (err: any) {
-      console.error("[PDF_CLIENT_ERROR]", err);
-      setError(err.message || "Unable to download PDF. Please try again.");
+      console.error("[EXPORT_PDF_FAILED]", err);
+      setError("Unable to download PDF. Please try again.");
     } finally {
       setDownloading(false);
     }
@@ -402,7 +427,7 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-50"
           >
             {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-            <span>Export PDF</span>
+            <span>{downloading ? "Preparing PDF..." : "Export PDF"}</span>
           </button>
         </div>
       </header>
@@ -452,6 +477,12 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
               <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs text-emerald-500 flex items-center gap-2 animate-zoom-in">
                 <Check className="h-4 w-4 shrink-0" />
                 <span>{success}</span>
+              </div>
+            )}
+            {downloading && (
+              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 text-xs text-blue-500 flex items-center gap-2 animate-zoom-in">
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                <span>Generating and compiling PDF... Please wait.</span>
               </div>
             )}
 
