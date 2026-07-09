@@ -17,11 +17,13 @@ import {
   ChevronRight,
   RefreshCw,
   HelpCircle,
-  X
+  X,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import UpgradeModal from "@/components/dashboard/UpgradeModal";
 import { templatesList } from "@/components/resume-templates/templates";
+import { templatesListRegistry } from "@/lib/resume-templates/template-registry";
 import { normalizeResumeData } from "@/lib/resume-normalizer";
 
 export default function ResumeEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,6 +58,7 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
   // Navigation track
   const [activeEditorTab, setActiveEditorTab] = useState("personalInfo");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchData = async () => {
     try {
@@ -184,11 +187,6 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
 
   // Template change switcher
   const handleTemplateChange = (id: string) => {
-    const selected = templatesList.find(t => t.id === id);
-    if (selected?.type === "PREMIUM" && !isPremiumUser) {
-      setShowUpgradeModal(true);
-      return;
-    }
     setTemplateId(id);
   };
 
@@ -433,12 +431,24 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
               <div className="space-y-4 animate-zoom-in">
                 <div>
                   <h3 className="text-sm font-bold border-b border-border pb-1">Choose Resume Layout</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Select one of our 10 professional resume designs. All templates are currently free for portfolio launch.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Select one of our 50+ professional resume designs. All resume templates are currently free for portfolio/demo launch.</p>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search templates by name, role, or tag..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-9 pl-9 pr-4 rounded-xl border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  />
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 </div>
 
                 {/* Category filters */}
                 <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none shrink-0 border-b border-border/50">
-                  {["All", "ATS Friendly", "Modern", "Developer", "Executive", "Creative"].map((cat) => (
+                  {["All", "ATS Friendly", "Software Engineer", "Frontend Developer", "Full Stack", "Data", "Designer", "Executive", "Creative", "Minimal", "Corporate"].map((cat) => (
                     <button
                       key={cat}
                       type="button"
@@ -456,7 +466,23 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                   {templatesList
-                    .filter(t => selectedCategory === "All" || (t as any).category === selectedCategory)
+                    .filter((t) => {
+                      if (searchQuery) {
+                        const q = searchQuery.toLowerCase();
+                        const config = templatesListRegistry.find(c => c.id === t.id);
+                        const matchesSearch = 
+                          t.name.toLowerCase().includes(q) ||
+                          t.category.toLowerCase().includes(q) ||
+                          (config?.tags || []).some(tag => tag.toLowerCase().includes(q));
+                        if (!matchesSearch) return false;
+                      }
+
+                      if (selectedCategory === "All") return true;
+                      if (selectedCategory === "Full Stack") return t.category.includes("Full Stack");
+                      if (selectedCategory === "Data") return t.category.includes("Data");
+                      if (selectedCategory === "Designer") return t.category.includes("Designer") || t.category.includes("UI/UX");
+                      return t.category.toLowerCase().includes(selectedCategory.toLowerCase());
+                    })
                     .map((t) => {
                       const isActive = t.id === templateId;
                       let gradientBorder = "border-border hover:border-indigo-500/40";
@@ -484,137 +510,86 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
                         >
                           <div>
                             {/* Mock design representation box */}
-                            <div className="w-full h-24 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden bg-secondary/50 border border-border shadow-inner">
-                              {t.id === "classic-clean" ? (
-                                <div className="absolute inset-0 p-2 flex flex-col justify-between items-center text-center bg-white font-serif select-none">
-                                  <div className="space-y-0.5 mt-1">
-                                    <div className="h-1.5 w-16 bg-zinc-800 rounded mx-auto" />
-                                    <div className="h-1 w-24 bg-zinc-400 rounded mx-auto" />
-                                  </div>
-                                  <div className="w-full space-y-1 my-1">
-                                    <div className="h-0.5 w-full bg-zinc-200 rounded" />
-                                    <div className="h-1 w-full bg-zinc-100 rounded" />
-                                    <div className="h-1 w-5/6 bg-zinc-100 rounded" />
-                                  </div>
-                                  <div className="h-1 w-8 bg-zinc-300 rounded" />
-                                </div>
-                              ) : t.id === "modern-blue" ? (
-                                <div className="absolute inset-0 p-2.5 flex flex-col justify-between bg-white font-sans select-none border-l-4 border-blue-600">
-                                  <div>
-                                    <div className="h-2 w-20 bg-zinc-850 rounded" />
-                                    <div className="h-1 w-12 bg-blue-500 rounded mt-1" />
-                                  </div>
-                                  <div className="space-y-1 w-full">
-                                    <div className="h-1 w-full bg-zinc-105 rounded" />
-                                    <div className="h-1 w-4/5 bg-zinc-105 rounded" />
-                                  </div>
-                                </div>
-                              ) : t.id === "minimal-ats" ? (
-                                <div className="absolute inset-0 p-3 flex flex-col justify-between bg-white font-mono select-none">
-                                  <div className="text-center space-y-1">
-                                    <div className="h-1.5 w-24 bg-zinc-900 rounded mx-auto" />
-                                    <div className="h-1 w-32 bg-zinc-400 rounded mx-auto" />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <div className="h-1 w-full bg-zinc-100 rounded" />
-                                    <div className="h-1 w-full bg-zinc-100 rounded" />
-                                  </div>
-                                </div>
-                              ) : t.id === "executive-pro" ? (
-                                <div className="absolute inset-0 p-2.5 flex flex-col justify-between bg-white font-serif select-none">
-                                  <div className="border-b border-zinc-850 pb-1.5 w-full">
-                                    <div className="h-2 w-24 bg-zinc-900 rounded" />
-                                    <div className="h-1 w-16 bg-zinc-550 rounded mt-1" />
-                                  </div>
-                                  <div className="space-y-1.5 w-full">
-                                    <div className="h-1.5 w-full bg-zinc-100 rounded" />
-                                    <div className="h-1.5 w-5/6 bg-zinc-100 rounded" />
-                                  </div>
-                                </div>
-                              ) : t.id === "creative-sidebar" ? (
-                                <div className="absolute inset-0 flex bg-white font-sans select-none">
-                                  <div className="w-1/3 bg-slate-900 p-2 flex flex-col gap-1.5 text-white">
-                                    <div className="h-2 w-full bg-slate-400 rounded-sm" />
-                                    <div className="h-1.5 w-2/3 bg-slate-600 rounded-sm" />
-                                    <div className="mt-auto h-1.5 w-4/5 bg-slate-750 rounded-sm" />
-                                  </div>
-                                  <div className="flex-1 p-2.5 space-y-2">
-                                    <div className="h-2.5 w-1/2 bg-slate-800 rounded" />
-                                    <div className="space-y-1">
-                                      <div className="h-1.5 w-full bg-zinc-100 rounded" />
-                                      <div className="h-1.5 w-full bg-zinc-100 rounded" />
+                            <div className="w-full h-24 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden bg-secondary/20 border border-border shadow-inner">
+                              {(() => {
+                                const config = templatesListRegistry.find(c => c.id === t.id) || templatesListRegistry[0];
+                                const palette = config.colorPalette;
+                                const layout = config.layoutType;
+
+                                // Colors mapping
+                                const bgColors: Record<string, string> = {
+                                  indigo: "bg-indigo-600", dark: "bg-indigo-500", emerald: "bg-emerald-600",
+                                  violet: "bg-violet-600", slate: "bg-slate-600", amber: "bg-amber-600",
+                                  crimson: "bg-red-600", teal: "bg-teal-600", navy: "bg-blue-800",
+                                  purple: "bg-purple-600", orange: "bg-orange-600", green: "bg-green-600",
+                                  minimal: "bg-zinc-950"
+                                };
+                                const primaryBg = bgColors[palette] || "bg-indigo-600";
+
+                                if (layout === "sidebar") {
+                                  return (
+                                    <div className="absolute inset-0 flex bg-white font-sans select-none">
+                                      <div className={`w-[28%] ${primaryBg} p-1.5 flex flex-col gap-1 text-[5px] text-white opacity-90`}>
+                                        <div className="h-1 w-full bg-white/40 rounded-sm" />
+                                        <div className="h-0.5 w-2/3 bg-white/30 rounded-sm" />
+                                        <div className="mt-auto h-0.5 w-full bg-white/20 rounded-sm" />
+                                      </div>
+                                      <div className="flex-1 p-2 space-y-1.5 bg-zinc-50/50">
+                                        <div className={`h-1.5 w-1/2 ${primaryBg} rounded-sm opacity-20`} />
+                                        <div className="space-y-0.5 w-full">
+                                          <div className="h-0.5 w-full bg-zinc-200 rounded-sm" />
+                                          <div className="h-0.5 w-5/6 bg-zinc-200 rounded-sm" />
+                                          <div className="h-0.5 w-full bg-zinc-200 rounded-sm" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+
+                                if (layout === "developer") {
+                                  return (
+                                    <div className="absolute inset-0 bg-zinc-950 font-mono text-[4.5px] p-2 text-indigo-400 border border-zinc-900 select-none">
+                                      <div className="flex gap-0.5 mb-1 opacity-70">
+                                        <span className="h-0.5 w-0.5 rounded-full bg-red-500" />
+                                        <span className="h-0.5 w-0.5 rounded-full bg-yellow-500" />
+                                        <span className="h-0.5 w-0.5 rounded-full bg-green-500" />
+                                      </div>
+                                      <span className="text-emerald-500">&gt; cat config.json</span><br/>
+                                      <span className="text-white"># Suraj V.</span><br/>
+                                      <span className="text-zinc-500">// Tech Stack ...</span>
+                                    </div>
+                                  );
+                                }
+
+                                if (layout === "corporate" || layout === "modern" || layout === "tech") {
+                                  return (
+                                    <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white font-sans select-none">
+                                      <div className={`${primaryBg} h-2 rounded-sm flex justify-between items-center px-1.5 text-white w-full opacity-90`}>
+                                        <div className="h-0.5 w-12 bg-white/40 rounded-sm" />
+                                        <div className="h-0.5 w-6 bg-white/20 rounded-sm" />
+                                      </div>
+                                      <div className="space-y-1 w-full mt-2">
+                                        <div className="h-0.5 w-full bg-zinc-200 rounded-sm" />
+                                        <div className="h-0.5 w-5/6 bg-zinc-200 rounded-sm" />
+                                      </div>
+                                    </div>
+                                  );
+                                }
+
+                                // Default / ATS / Elegant / Executive
+                                return (
+                                  <div className="absolute inset-0 p-2 flex flex-col justify-between items-center text-center bg-white font-sans select-none">
+                                    <div className="space-y-0.5 mt-1">
+                                      <div className={`h-1.5 w-16 ${primaryBg} rounded mx-auto opacity-80`} />
+                                      <div className="h-0.5 w-24 bg-zinc-400 rounded mx-auto" />
+                                    </div>
+                                    <div className="w-full space-y-0.5 my-1">
+                                      <div className="h-0.5 w-full bg-zinc-150 rounded" />
+                                      <div className="h-0.5 w-full bg-zinc-150 rounded" />
                                     </div>
                                   </div>
-                                </div>
-                              ) : t.id === "developer-dark" ? (
-                                <div className="absolute inset-0 bg-zinc-950 font-mono text-[5.5px] p-2 text-emerald-450 border border-zinc-900 select-none">
-                                  <div className="flex gap-1 mb-1 opacity-70">
-                                    <span className="h-1 w-1 rounded-full bg-red-500" />
-                                    <span className="h-1 w-1 rounded-full bg-yellow-500" />
-                                    <span className="h-1 w-1 rounded-full bg-green-500" />
-                                  </div>
-                                  <span className="text-blue-400">&gt; cat dev.md</span><br/>
-                                  <span className="text-white"># Suraj V.</span><br/>
-                                  <span className="text-zinc-550">// Software Eng</span>
-                                </div>
-                              ) : t.id === "corporate-elite" ? (
-                                <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white font-sans select-none">
-                                  <div className="bg-slate-900 p-1.5 rounded flex justify-between items-center text-white w-full">
-                                    <div className="h-2 w-16 bg-white rounded" />
-                                    <div className="h-1 w-8 bg-blue-300 rounded" />
-                                  </div>
-                                  <div className="space-y-1 w-full">
-                                    <div className="h-1.5 w-full bg-zinc-100 rounded" />
-                                    <div className="h-1.5 w-5/6 bg-zinc-100 rounded" />
-                                  </div>
-                                </div>
-                              ) : t.id === "elegant-serif" ? (
-                                <div className="absolute inset-0 p-2 flex flex-col justify-between items-center text-center bg-white font-serif select-none">
-                                  <div className="space-y-1 mt-1 border-b border-zinc-200 pb-1.5 w-full">
-                                    <div className="h-2 w-20 bg-zinc-850 rounded mx-auto" />
-                                    <div className="h-1 w-12 bg-zinc-400 rounded mx-auto" />
-                                  </div>
-                                  <div className="space-y-1 w-full my-1">
-                                    <div className="h-1 w-full bg-zinc-100 rounded" />
-                                    <div className="h-1 w-full bg-zinc-100 rounded" />
-                                  </div>
-                                </div>
-                              ) : t.id === "tech-gradient" ? (
-                                <div className="absolute inset-0 bg-zinc-900 border border-zinc-800 p-2.5 flex flex-col justify-between select-none">
-                                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
-                                  <div className="mt-1">
-                                    <div className="h-2 w-16 bg-white rounded" />
-                                    <div className="h-1 w-10 bg-zinc-500 rounded mt-1" />
-                                  </div>
-                                  <div className="flex gap-1 flex-wrap">
-                                    <div className="h-1.5 w-5 bg-blue-500/20 border border-blue-500/30 rounded" />
-                                    <div className="h-1.5 w-7 bg-indigo-500/20 border border-indigo-500/30 rounded" />
-                                  </div>
-                                </div>
-                              ) : t.id === "compact-one-page" ? (
-                                <div className="absolute inset-0 p-2.5 flex flex-col justify-between bg-white font-sans select-none">
-                                  <div className="flex justify-between items-center border-b pb-1">
-                                    <div className="h-2 w-16 bg-zinc-800 rounded" />
-                                    <div className="h-1 w-10 bg-zinc-400 rounded" />
-                                  </div>
-                                  <div className="space-y-0.5">
-                                    <div className="h-1 w-full bg-zinc-105 rounded" />
-                                    <div className="h-1 w-full bg-zinc-105 rounded" />
-                                    <div className="h-1 w-full bg-zinc-105 rounded" />
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="absolute inset-0 p-2 flex flex-col justify-between bg-white select-none">
-                                  <div className="flex gap-2">
-                                    <div className="h-2.5 w-2.5 bg-blue-500 rounded-full shrink-0" />
-                                    <div className="h-2 w-1/2 bg-zinc-650 rounded" />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <div className="h-1.5 w-full bg-zinc-105 rounded" />
-                                    <div className="h-1.5 w-5/6 bg-zinc-105 rounded" />
-                                  </div>
-                                </div>
-                              )}
+                                );
+                              })()}
                             </div>
 
                             {/* Text info */}

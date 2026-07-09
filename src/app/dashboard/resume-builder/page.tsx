@@ -259,7 +259,7 @@ function ResumeBuilderContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {documents.map((doc) => {
             const hasPremiumTemplate = doc.templateType === "PREMIUM";
-            const needsUpgrade = hasPremiumTemplate && !isPremiumUser;
+            const needsUpgrade = false;
             return (
               <div 
                 key={doc.id}

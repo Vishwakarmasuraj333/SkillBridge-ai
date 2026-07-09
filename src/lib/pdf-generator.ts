@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import { getPdfBrowser } from "./pdf/browser";
 import { StructuredResumeData } from "../components/resume-templates/types";
 import { normalizeResumeData } from "./resume-normalizer";
 
@@ -360,10 +360,10 @@ export async function generatePDF(templateId: string, data: StructuredResumeData
   const normalizedData = normalizeResumeData(data);
   const html = generateResumeHTML(templateId, normalizedData, isPremium);
   
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await getPdfBrowser();
+  if (!browser) {
+    throw new Error("Could not launch Chromium/Puppeteer browser.");
+  }
 
   try {
     const page = await browser.newPage();
@@ -387,10 +387,10 @@ export async function generatePDF(templateId: string, data: StructuredResumeData
 }
 
 export async function generateResumePdfBuffer({ html, fileName }: { html: string; fileName?: string }): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await getPdfBrowser();
+  if (!browser) {
+    throw new Error("Could not launch Chromium/Puppeteer browser.");
+  }
 
   try {
     const page = await browser.newPage();
