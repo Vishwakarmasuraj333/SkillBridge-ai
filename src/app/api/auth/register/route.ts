@@ -157,7 +157,6 @@ function getSafeDatabaseErrorMessage(error: any): { message: string; status: num
     meta: error?.meta,
   });
 
-  const message = error?.message || "";
   const code = error?.code || "";
 
   // Duplicate email / Unique constraint
@@ -168,73 +167,8 @@ function getSafeDatabaseErrorMessage(error: any): { message: string; status: num
     };
   }
 
-  // Database tables missing
-  if (
-    code === "P2021" || 
-    message.includes("doesn't exist") || 
-    message.includes("Table") || 
-    message.includes("relation") || 
-    message.includes("does not exist")
-  ) {
-    return {
-      message: "Database tables are missing. Please run database migrations or push.",
-      status: 500
-    };
-  }
-
-  // Database Connection / Reachability
-  if (
-    code === "P1001" || 
-    message.includes("Can't reach database server") || 
-    message.includes("ETIMEDOUT") || 
-    message.includes("ECONNREFUSED")
-  ) {
-    return {
-      message: "Database connection failed. Please ensure the database server is running and accessible.",
-      status: 500
-    };
-  }
-
-  // Connection timeout / SSL handshake errors
-  if (
-    code === "P1008" || 
-    message.includes("timeout") || 
-    message.includes("SSL") || 
-    message.includes("ssl") || 
-    message.includes("handshake")
-  ) {
-    return {
-      message: "Database connection timeout or SSL handshake error. Please check your database URL configuration.",
-      status: 500
-    };
-  }
-
-  // Authentication/Access Denied
-  if (
-    code === "P1000" || 
-    message.includes("Access denied") || 
-    message.includes("Authentication failed")
-  ) {
-    return {
-      message: "Database authentication failed. Please check the database credentials.",
-      status: 500
-    };
-  }
-
-  // Unknown database
-  if (
-    code === "P1049" || 
-    message.includes("Unknown database") || 
-    message.includes("database does not exist")
-  ) {
-    return {
-      message: "Unknown database name. Please ensure the database exists on the server.",
-      status: 500
-    };
-  }
-
   return {
-    message: "An unexpected database error occurred. Please check database logs.",
+    message: "Database connection failed. Check production database configuration.",
     status: 500
   };
 }

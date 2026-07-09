@@ -29,7 +29,19 @@ export async function GET(req: Request) {
 
   let connection;
   try {
-    connection = await mysql.createConnection(dbUrl);
+    const cleanUrl = dbUrl.trim();
+    const urlObj = new URL(cleanUrl.startsWith("mysql://") ? cleanUrl : `mysql://${cleanUrl}`);
+
+    connection = await mysql.createConnection({
+      host: urlObj.hostname,
+      port: urlObj.port ? parseInt(urlObj.port) : 4000,
+      user: urlObj.username,
+      password: urlObj.password ? decodeURIComponent(urlObj.password) : undefined,
+      database: urlObj.pathname.replace(/^\//, "") || "skillbridge_db",
+      ssl: {
+        rejectUnauthorized: true
+      }
+    });
     
     const [rows]: any = await connection.query("SELECT DATABASE() as db");
     const dbName = rows?.[0]?.db || "unknown";
@@ -40,10 +52,7 @@ export async function GET(req: Request) {
       ok: true,
       databaseUrlConfigured: true,
       database: dbName,
-      maskedUrl,
-      errorCode: null,
-      errorMessage: null,
-      hint: "Database connection successful! Run 'npx prisma db push' to ensure tables are created."
+      message: "TiDB connection working"
     });
   } catch (err: any) {
     if (connection) {
@@ -69,8 +78,6 @@ export async function GET(req: Request) {
     return NextResponse.json({
       ok: false,
       databaseUrlConfigured: true,
-      database: null,
-      maskedUrl,
       errorCode: errCode || "CONNECTION_FAILED",
       errorMessage: errMsg,
       hint

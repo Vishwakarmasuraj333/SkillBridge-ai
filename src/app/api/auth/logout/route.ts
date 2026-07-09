@@ -10,13 +10,17 @@ export async function POST(req: Request) {
     const user = await getAuthenticatedUser(req);
     
     if (user) {
-      await prisma.activityLog.create({
-        data: {
-          userId: user.id,
-          action: "LOGOUT",
-          details: "User logged out.",
-        },
-      });
+      try {
+        await prisma.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "LOGOUT",
+            details: "User logged out.",
+          },
+        });
+      } catch (dbLogErr) {
+        console.warn("[LOGOUT_WARN] Failed to write activity log:", dbLogErr);
+      }
     }
 
     const cookieStore = await cookies();
