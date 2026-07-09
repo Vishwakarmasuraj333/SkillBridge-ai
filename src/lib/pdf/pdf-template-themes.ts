@@ -170,9 +170,10 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r, g, b };
 }
 
-export function getPdfTheme(templateId: string): PdfTheme {
+export function getPdfTheme(templateId?: string): PdfTheme {
+  const safeId = templateId || "classic-clean";
   const matchKey = Object.keys(HEX_THEMES).find(
-    (key) => key.toLowerCase() === templateId.toLowerCase()
+    (key) => key.toLowerCase() === safeId.toLowerCase()
   );
   
   const rawTheme = HEX_THEMES[matchKey || "classic-clean"];

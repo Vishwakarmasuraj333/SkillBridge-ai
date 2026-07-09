@@ -220,6 +220,10 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
 
   // PDF download
   const handleDownloadPDF = async () => {
+    if (!id) {
+      setError("Save or generate resume first.");
+      return;
+    }
     setDownloading(true);
     setError("");
     setSuccess("");
@@ -235,15 +239,21 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
       });
 
       const res = await fetch(`/api/resume-builder/${id}/download`, {
-        method: "POST",
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
       });
 
+      const contentType = res.headers.get("content-type") || "";
+
       if (!res.ok) {
-        let errMsg = "Download rendering failed.";
-        try {
-          const errData = await res.json();
-          errMsg = errData.error || errData.message || errMsg;
-        } catch (_) {
+        let errMsg = "Unable to download PDF. Please try again.";
+        if (contentType.includes("application/json")) {
+          try {
+            const errData = await res.json();
+            errMsg = errData.message || errData.error || errMsg;
+          } catch (_) {}
+        } else {
           try {
             const rawText = await res.text();
             if (rawText) errMsg = rawText;
@@ -252,10 +262,15 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
         throw new Error(errMsg);
       }
 
-      // Download file stream
+      if (!contentType.includes("application/pdf")) {
+        const text = await res.text().catch(() => "");
+        console.error("[PDF_DOWNLOAD_NON_PDF_RESPONSE]", text.slice(0, 500));
+        throw new Error("PDF file was not returned by the server.");
+      }
+
       const blob = await res.blob();
-      if (!blob.type.includes("application/pdf")) {
-        throw new Error("Invalid response format. Expected a PDF file.");
+      if (!blob || blob.size < 1000) {
+        throw new Error("PDF file is empty or invalid.");
       }
 
       const url = window.URL.createObjectURL(blob);
@@ -263,7 +278,7 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
       a.href = url;
       // Get filename from response header or compute fallback
       const contentDisposition = res.headers.get("content-disposition");
-      let filename = "Resume.pdf";
+      let filename = `skillbridge-resume-${Date.now()}.pdf`;
       if (contentDisposition) {
         const matches = /filename="([^"]+)"/.exec(contentDisposition);
         if (matches && matches[1]) {
@@ -275,9 +290,10 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      setSuccess("PDF downloaded successfully!");
+      setSuccess("PDF downloaded successfully.");
     } catch (err: any) {
-      setError(err.message || "Failed to download PDF.");
+      console.error("[PDF_CLIENT_ERROR]", err);
+      setError(err.message || "Unable to download PDF. Please try again.");
     } finally {
       setDownloading(false);
     }

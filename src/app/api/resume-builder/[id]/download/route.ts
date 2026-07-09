@@ -9,18 +9,17 @@ import { generateResumePdfBuffer } from "@/lib/pdf/generate-resume-pdf";
 import { normalizeResumeData } from "@/lib/resume-normalizer";
 import { templatesList } from "@/components/resume-templates/templates";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Core shared handler that supports both GET and POST
+async function handlePdfDownload(req: Request, id: string) {
   try {
+    console.error("[PDF_ROUTE_START]", { route: `/api/resume-builder/${id}/download`, id });
+
     // 1. Authenticate user
     const user = await getAuthenticatedUser(req);
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.error("[PDF_ROUTE_ERROR]", { name: "AuthError", message: "Unauthorized access attempt" });
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
-
-    const { id } = await params;
 
     // 2. Fetch resume builder document from Prisma
     const builderDoc = await prisma.resumeBuilderDocument.findFirst({
@@ -28,7 +27,8 @@ export async function POST(
     });
 
     if (!builderDoc) {
-      return NextResponse.json({ error: "Document not found." }, { status: 404 });
+      console.error("[PDF_ROUTE_ERROR]", { name: "NotFoundError", message: `Document ${id} not found` });
+      return NextResponse.json({ success: false, message: "Document not found." }, { status: 404 });
     }
 
     let structuredData = builderDoc.structuredData as any;
@@ -129,4 +129,20 @@ export async function POST(
       message: "Unable to download PDF. Please refresh and try again."
     }, { status: 500 });
   }
+}
+
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  return handlePdfDownload(req, id);
+}
+
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  return handlePdfDownload(req, id);
 }

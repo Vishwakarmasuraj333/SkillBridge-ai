@@ -3,13 +3,37 @@ import { StructuredResumeData } from "../../components/resume-templates/types";
 import { getPdfTheme, PdfTheme } from "./pdf-template-themes";
 
 export async function generateResumePdfBuffer({
-  data,
+  data: inputData,
   templateId,
 }: {
   data: StructuredResumeData;
-  templateId: string;
+  templateId?: string;
 }): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
+
+  // Fallback check: if no valid resume data is present, draw a standard fallback template
+  const hasNoData = !inputData || !inputData.personalInfo || (!inputData.personalInfo.fullName && !inputData.personalInfo.email && !inputData.summary && (!inputData.experience || inputData.experience.length === 0));
+  const data = hasNoData ? {
+    personalInfo: {
+      fullName: "Resume",
+      jobTitle: "Generated with SkillBridge AI",
+      email: "info@skillbridge.ai",
+      phone: "",
+      location: "",
+      linkedin: "",
+      github: "",
+      portfolio: ""
+    },
+    summary: "Add resume details in the editor to populate and improve this document.",
+    skills: { frontend: [], backend: [], database: [], tools: [], other: [] },
+    experience: [],
+    projects: [],
+    education: [],
+    certifications: [],
+    achievements: [],
+    languages: [],
+    keywords: []
+  } : inputData;
   
   // Embed safe standard fonts
   const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
@@ -76,6 +100,7 @@ export async function generateResumePdfBuffer({
 
   // Word wrap utility
   function wrapText(text: string, maxWidth: number, fontSize: number, font: any): string[] {
+    if (!text || typeof text !== "string") return [];
     const words = text.split(" ");
     const lines: string[] = [];
     let currentLine = "";
