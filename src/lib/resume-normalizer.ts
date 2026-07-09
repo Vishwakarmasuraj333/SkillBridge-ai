@@ -1,69 +1,24 @@
-export function renderText(value: any): string {
-  if (value === null || value === undefined) {
-    return "";
-  }
-  if (typeof value === "string" || typeof value === "number") {
-    return String(value);
-  }
-  if (Array.isArray(value)) {
-    return value.map(v => renderText(v)).filter(Boolean).join(", ");
-  }
+export function renderText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) return value.map(renderText).filter(Boolean).join(", ");
   if (typeof value === "object") {
-    // Check for specific common structures
-    // 1. { name, issuer, year }
-    if ("name" in value && ("issuer" in value || "year" in value)) {
-      const name = renderText(value.name);
-      const issuer = renderText(value.issuer);
-      const year = renderText(value.year);
-      let parts = [];
-      if (name) parts.push(name);
-      if (issuer) parts.push(issuer);
-      let text = parts.join(" - ");
-      if (year) {
-        text += text ? ` (${year})` : year;
-      }
-      return text;
-    }
-    // 2. { name, url }
-    if ("name" in value && "url" in value) {
-      return renderText(value.name);
-    }
-    // 3. { title, issuer, date }
-    if ("title" in value && ("issuer" in value || "date" in value)) {
-      const title = renderText(value.title);
-      const issuer = renderText(value.issuer);
-      const date = renderText(value.date);
-      let parts = [];
-      if (title) parts.push(title);
-      if (issuer) parts.push(issuer);
-      let text = parts.join(" - ");
-      if (date) {
-        text += text ? ` (${date})` : date;
-      }
-      return text;
-    }
-    // 4. { degree, institution, year }
-    if ("degree" in value && ("institution" in value || "year" in value)) {
-      const degree = renderText(value.degree);
-      const institution = renderText(value.institution);
-      const year = renderText(value.year);
-      let parts = [];
-      if (degree) parts.push(degree);
-      if (institution) parts.push(institution);
-      let text = parts.join(" - ");
-      if (year) {
-        text += text ? ` (${year})` : year;
-      }
-      return text;
-    }
-
-    // Otherwise return a readable joined string from object values
-    const vals = Object.values(value)
-      .map(v => renderText(v))
-      .filter(Boolean);
-    return vals.join(" - ");
+    const obj = value as Record<string, unknown>;
+    return [
+      obj.name,
+      obj.title,
+      obj.role,
+      obj.company,
+      obj.issuer,
+      obj.year,
+      obj.description,
+    ]
+      .map(renderText)
+      .filter(Boolean)
+      .join(" - ");
   }
-  return String(value);
+  return "";
 }
 
 export function normalizeStringArray(value: any): string[] {

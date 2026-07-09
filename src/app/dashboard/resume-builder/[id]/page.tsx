@@ -239,12 +239,25 @@ export default function ResumeEditPage({ params }: { params: Promise<{ id: strin
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Download rendering failed.");
+        let errMsg = "Download rendering failed.";
+        try {
+          const errData = await res.json();
+          errMsg = errData.error || errData.message || errMsg;
+        } catch (_) {
+          try {
+            const rawText = await res.text();
+            if (rawText) errMsg = rawText;
+          } catch (__) {}
+        }
+        throw new Error(errMsg);
       }
 
       // Download file stream
       const blob = await res.blob();
+      if (!blob.type.includes("application/pdf")) {
+        throw new Error("Invalid response format. Expected a PDF file.");
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
